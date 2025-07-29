@@ -11,13 +11,16 @@ const store = createStore({
     },
     getters: {},
     actions: {
-        addMarker({commit, dispatch}, point) {
-            commit('addMarker', [point.latlng.lat, point.latlng.lng]);
-            dispatch('updateLocalStorage')
+        // eslint-disable-next-line no-unused-vars
+        addMarker({commit, dispatch}, marker) {
+            commit('addMarker', marker);
+
+            // dispatch('updateLocalStorage')
         },
+        // eslint-disable-next-line no-unused-vars
         removeMarker({state, dispatch}, index) {
             state.markers.splice(index, 1);
-            dispatch('updateLocalStorage')
+            // dispatch('updateLocalStorage')
         },
         updateLocalStorage({state}) {
             localStorage.setItem('markers', JSON.stringify(state.markers));

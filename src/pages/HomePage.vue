@@ -2,10 +2,9 @@
 import "leaflet/dist/leaflet.css";
 // import {LMap, LMarker, LTileLayer} from '@vue-leaflet/vue-leaflet'
 // eslint-disable-next-line no-unused-vars
-import {mapState, mapActions} from 'vuex'
+import {mapActions, mapState} from 'vuex'
 // import RM from 'leaflet-routing-machine'
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
@@ -17,7 +16,8 @@ export default {
     // LMap,
   },
   data: () => ({
-    map: null
+    map: null,
+    route: null
   }),
   computed: {
     ...mapState(['markers'])
@@ -26,10 +26,9 @@ export default {
     ...mapActions(['addMarker', 'removeMarker', 'getMarkersFromLocalStorage']),
   },
   created() {
-    console.log(L)
     this.$store.dispatch('getMarkersFromLocalStorage')
   },
-  mounted() {
+  mounted: function () {
     delete L.Icon.Default.prototype._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
@@ -44,16 +43,29 @@ export default {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(this.map);
 
-    // 3. Додавання маршруту
-    L.Routing.control({
-      waypoints: [
-        L.latLng(50.4501, 30.5234),  // Точка А (Київ)
-        L.latLng(50.4643, 30.5197),  // Точка B (інша точка в Києві)
-      ],
-      routeWhileDragging: true, // дозволяє змінювати маршрут вручну
-    }).addTo(this.map);
-  }
 
+    this.map.on("click", (map) => {
+      if (this.route) {
+        this.map.removeControl(this.route);
+      }
+
+
+      this.route = L.Routing.control({
+        waypoints: [
+          L.latLng(this.markers[this.markers.length - 1]),  // Точка А (Київ)
+          map.latlng
+        ],
+        routeWhileDragging: true, // дозволяє змінювати маршрут вручну
+      }).addTo(this.map);
+
+
+      const marker = L.marker(map.latlng)
+
+
+      this.addMarker(marker)
+      marker.addTo(this.map)
+    })
+  },
 }
 </script>
 
@@ -67,27 +79,27 @@ export default {
         <ul>
           <li v-for="(marker, index) in markers" :key="index"
               style="margin-bottom: 10px; display: flex;">
-            {{ marker }}
+            {{ marker.getLatLng() }}
 
             <button @click="removeMarker(index)">Del</button>
           </li>
         </ul>
       </div>
 
-      <div id="map" style="height: 500px; width: 100%;"></div>
-<!--      <l-map ref="map" :center="[49.432720, 27.000026]" :zoom="13" @click="addMarker">-->
-<!--        <l-tile-layer-->
-<!--            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"-->
-<!--            layer-type="base"-->
-<!--            name="OpenStreetMap"-->
-<!--        />-->
-<!--        <l-marker v-for="(marker,index) in markers"-->
-<!--                  :key="index"-->
-<!--                  :lat-lng="marker"-->
-<!--                  @click="removeMarker(index)"-->
-<!--        />-->
+      <div id="map" style="width: 100%;"></div>
+      <!--      <l-map ref="map" :center="[49.432720, 27.000026]" :zoom="13" @click="addMarker">-->
+      <!--        <l-tile-layer-->
+      <!--            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"-->
+      <!--            layer-type="base"-->
+      <!--            name="OpenStreetMap"-->
+      <!--        />-->
+      <!--        <l-marker v-for="(marker,index) in markers"-->
+      <!--                  :key="index"-->
+      <!--                  :lat-lng="marker"-->
+      <!--                  @click="removeMarker(index)"-->
+      <!--        />-->
 
-<!--      </l-map>-->
+      <!--      </l-map>-->
     </div>
   </div>
 </template>
